@@ -10,6 +10,7 @@ import SlideReview from '@/components/SlideReview';
 import SlideImprove from '@/components/SlideImprove';
 import DisciplineSelector from '@/components/DisciplineSelector';
 import { getDiscipline } from '@/lib/disciplines';
+import { getTheme, getLayout } from '@/lib/themes';
 import type { SlideOutline, ApprovedOutline, SlideDecision } from '@/lib/types';
 
 type Phase = 'input' | 'outlining' | 'reviewing' | 'generating'
@@ -36,6 +37,10 @@ function GenerateContent() {
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [uploadSlideCount, setUploadSlideCount] = useState(20);
 
+  // Theme/layout CSS for preview iframes
+  const [themeCSS, setThemeCSS] = useState('');
+  const [layoutCSS, setLayoutCSS] = useState('');
+
   // Post-generation state
   const [generatedSlideId, setGeneratedSlideId] = useState<string | null>(null);
   const [slideFragments, setSlideFragments] = useState<string[]>([]);
@@ -58,8 +63,9 @@ function GenerateContent() {
     try {
       const res = await fetch('/api/outline', { method: 'POST', body: formData });
       if (!res.ok) {
-        const err = await res.json();
-        setOutlineError(err.error || 'Failed to start outline');
+        let msg = 'Failed to start outline';
+        try { const err = await res.json(); msg = err.error || msg; } catch { msg = `Server error (${res.status})`; }
+        setOutlineError(msg);
         setPhase('input');
         return;
       }
@@ -82,8 +88,9 @@ function GenerateContent() {
         body: JSON.stringify({ ...data, disciplineId }),
       });
       if (!res.ok) {
-        const err = await res.json();
-        setOutlineError(err.error || 'Failed to start outline');
+        let msg = 'Failed to start outline';
+        try { const err = await res.json(); msg = err.error || msg; } catch { msg = `Server error (${res.status})`; }
+        setOutlineError(msg);
         setPhase('input');
         return;
       }
@@ -135,6 +142,10 @@ function GenerateContent() {
 
   const handleApprove = (approved: ApprovedOutline) => {
     const enabledSlides = approved.slides.filter(s => s.enabled);
+    const theme = getTheme(approved.themeId);
+    const layout = getLayout(approved.layoutId);
+    setThemeCSS(theme.css);
+    setLayoutCSS(layout.css);
     setRequestData({
       topic: approved.topic,
       courseLevel: approved.courseLevel,
@@ -235,6 +246,8 @@ function GenerateContent() {
           requestData={requestData}
           isUpload={false}
           disciplineCSS={discipline.extraCSS}
+          themeCSS={themeCSS}
+          layoutCSS={layoutCSS}
           onGenerationComplete={handleGenerationComplete}
         />
       </div>
@@ -250,6 +263,8 @@ function GenerateContent() {
           fragments={slideFragments}
           notes={slideNotes}
           disciplineCSS={discipline.extraCSS}
+          themeCSS={themeCSS}
+          layoutCSS={layoutCSS}
           onComplete={handleReviewComplete}
           onSkip={handleReviewSkip}
         />
@@ -268,6 +283,8 @@ function GenerateContent() {
           decisions={rejected}
           disciplineId={disciplineId}
           disciplineCSS={discipline.extraCSS}
+          themeCSS={themeCSS}
+          layoutCSS={layoutCSS}
           onComplete={handleImproveComplete}
         />
       </div>

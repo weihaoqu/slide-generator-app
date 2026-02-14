@@ -7,6 +7,8 @@ interface GenerationProgressProps {
   requestData: FormData | object;
   isUpload: boolean;
   disciplineCSS?: string;
+  themeCSS?: string;
+  layoutCSS?: string;
   onGenerationComplete?: (slideId: string, fragments: string[], notes: string[]) => void;
 }
 
@@ -24,6 +26,8 @@ export default function GenerationProgress({
   requestData,
   isUpload,
   disciplineCSS = '',
+  themeCSS = '',
+  layoutCSS = '',
   onGenerationComplete,
 }: GenerationProgressProps) {
   const [progress, setProgress] = useState<ProgressState>({
@@ -144,8 +148,8 @@ export default function GenerationProgress({
     : 0;
 
   const buildSrcdoc = useCallback((fragment: string) => {
-    return buildSlideSrcdoc(fragment, disciplineCSS);
-  }, [disciplineCSS]);
+    return buildSlideSrcdoc(fragment, disciplineCSS, themeCSS, layoutCSS);
+  }, [disciplineCSS, themeCSS, layoutCSS]);
 
   return (
     <div className="space-y-6">

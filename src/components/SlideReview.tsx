@@ -9,6 +9,8 @@ interface SlideReviewProps {
   fragments: string[];
   notes: string[];
   disciplineCSS: string;
+  themeCSS?: string;
+  layoutCSS?: string;
   onComplete: (decisions: SlideDecision[]) => void;
   onSkip: () => void;
 }
@@ -18,6 +20,8 @@ export default function SlideReview({
   fragments,
   notes,
   disciplineCSS,
+  themeCSS = '',
+  layoutCSS = '',
   onComplete,
   onSkip,
 }: SlideReviewProps) {
@@ -78,7 +82,7 @@ export default function SlideReview({
     onComplete(result);
   };
 
-  const srcdoc = buildSlideSrcdoc(fragments[currentIndex] || '', disciplineCSS);
+  const srcdoc = buildSlideSrcdoc(fragments[currentIndex] || '', disciplineCSS, themeCSS, layoutCSS);
 
   const currentNote = notes[currentIndex] || '';
 

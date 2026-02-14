@@ -1,6 +1,9 @@
 import AnthropicBedrock from '@anthropic-ai/bedrock-sdk';
-import { buildTemplate, buildQualityChecklist, AVAILABLE_CSS_CLASSES, SVG_GUIDANCE } from './template';
+import { buildTemplate, buildQualityChecklist, AVAILABLE_CSS_CLASSES, buildSvgGuidance, SVG_GUIDANCE } from './template';
 import { getDiscipline } from './disciplines';
+import { getTheme, getLayout } from './themes';
+import type { ThemeConfig } from './themes/types';
+import type { LayoutConfig } from './themes/types';
 import type { DisciplineConfig } from './disciplines/types';
 import type { SlideOutline, ApprovedOutline, OutlineSlide, TeachingSuggestion, ContentSuggestion } from './types';
 
@@ -13,9 +16,16 @@ const client = new AnthropicBedrock({
 const FAST_MODEL = 'us.anthropic.claude-3-5-haiku-20241022-v1:0';
 const QUALITY_MODEL = 'us.anthropic.claude-sonnet-4-20250514-v1:0';
 
-function buildSystemPrompt(discipline: DisciplineConfig): string {
-  const template = buildTemplate(discipline);
+function buildSystemPrompt(discipline: DisciplineConfig, theme?: ThemeConfig, layout?: LayoutConfig): string {
+  const template = buildTemplate(discipline, theme, layout);
   const checklist = buildQualityChecklist(discipline);
+  const svgGuidance = buildSvgGuidance(theme);
+  const svgColors = theme?.svgColors || { stroke: '#94a3b8', shapeFill: '#1e293b', textFill: '#e2e8f0' };
+
+  const promptHints: string[] = [];
+  if (theme?.promptHint) promptHints.push(theme.promptHint);
+  if (layout?.promptHint) promptHints.push(layout.promptHint);
+  const hintBlock = promptHints.length > 0 ? `\nSTYLE GUIDANCE:\n${promptHints.map(h => `- ${h}`).join('\n')}\n` : '';
 
   return `You are an expert educational slide deck generator. You create interactive HTML teaching slide decks that are visually polished, pedagogically effective, and self-contained.
 
@@ -36,12 +46,12 @@ RULES:
 INLINE SVG DIAGRAMS:
 - Generate <svg> elements directly for rich visual diagrams — flowcharts, graphs, trees, geometric figures, molecular structures, circuit schematics, timelines, Venn diagrams
 - Wrap each SVG in <div class="svg-diagram"> for centering and responsiveness
-- Use dark-theme colors in SVGs: stroke="#94a3b8" for lines, fill="#1e293b" for shapes, fill="#e2e8f0" for text, accents #3b82f6 (blue), #8b5cf6 (purple), #10b981 (green), #f59e0b (amber)
+- Use theme colors in SVGs: stroke="${svgColors.stroke}" for lines, fill="${svgColors.shapeFill}" for shapes, fill="${svgColors.textFill}" for text
 - Always set viewBox on <svg>, never fixed width/height
 - Add <figcaption> after the SVG inside the wrapper for labels when helpful
 - Keep using <div class="diagram"> for ASCII art when monospace text is clearer (code output, algorithm traces, simple box-and-arrow layouts)
 - No external SVG references — all paths and shapes must be inline
-
+${hintBlock}
 ${discipline.systemPromptRules}
 
 ${checklist}`;
@@ -94,14 +104,21 @@ ${discipline.outlinePromptFragment}`;
 
 // --- Per-slide generation (incremental) ---
 
-function buildSlideSystemPrompt(discipline: DisciplineConfig, includeSvg: boolean): string {
+function buildSlideSystemPrompt(discipline: DisciplineConfig, includeSvg: boolean, theme?: ThemeConfig, layout?: LayoutConfig): string {
+  const svgBlock = includeSvg ? buildSvgGuidance(theme) : 'Do NOT use inline SVG. Use <div class="diagram"> for ASCII art only.';
+
+  const promptHints: string[] = [];
+  if (theme?.promptHint) promptHints.push(theme.promptHint);
+  if (layout?.promptHint) promptHints.push(layout.promptHint);
+  const hintBlock = promptHints.length > 0 ? `\nSTYLE GUIDANCE:\n${promptHints.map(h => `- ${h}`).join('\n')}\n` : '';
+
   return `You generate single HTML slide fragments for a teaching presentation.
 Output ONLY the <div id="sN" class="slide">...</div> block. No <!DOCTYPE>, no <html>, no <style>, no <script>.
 
 ${AVAILABLE_CSS_CLASSES}
 
-${includeSvg ? SVG_GUIDANCE : 'Do NOT use inline SVG. Use <div class="diagram"> for ASCII art only.'}
-
+${svgBlock}
+${hintBlock}
 ${discipline.systemPromptRules}
 
 Rules:
@@ -119,10 +136,12 @@ async function generateSlideContent(
   includeSvg: boolean,
   model: string,
   prevSlideTitle?: string,
+  theme?: ThemeConfig,
+  layout?: LayoutConfig,
 ): Promise<string> {
   const slideNum = slideIndex + 1;
   const isFirst = slideIndex === 0;
-  const systemPrompt = buildSlideSystemPrompt(discipline, includeSvg);
+  const systemPrompt = buildSlideSystemPrompt(discipline, includeSvg, theme, layout);
 
   const acceptedSuggestions = slide.suggestions.filter(s => s.accepted);
 
@@ -216,8 +235,10 @@ function assembleSlideHtml(
   fragments: string[],
   topic: string,
   discipline: DisciplineConfig,
+  theme?: ThemeConfig,
+  layout?: LayoutConfig,
 ): string {
-  const template = buildTemplate(discipline);
+  const template = buildTemplate(discipline, theme, layout);
   return template
     .replace('TOPIC_TITLE', topic)
     .replace('TOTAL_SLIDES', String(fragments.length))
@@ -349,11 +370,15 @@ export async function generateSlides(
     const model = quality === 'quality' ? QUALITY_MODEL : FAST_MODEL;
     const totalSlides = enabledSlides.length;
     const fragments: string[] = [];
+    const theme = getTheme(approved.themeId);
+    const layout = getLayout(approved.layoutId);
 
     console.log('[slides] starting per-slide generation', {
       totalSlides,
       model: quality,
       includeSvg,
+      themeId: theme.id,
+      layoutId: layout.id,
     });
     console.time('[slides] per-slide total');
 
@@ -367,6 +392,7 @@ export async function generateSlides(
           i, totalSlides, enabledSlides[i],
           discipline, includeSvg, model,
           i > 0 ? enabledSlides[i - 1].title : undefined,
+          theme, layout,
         );
         console.timeEnd(`[slides] slide ${i + 1}`);
         fragments.push(fragment);
@@ -383,7 +409,7 @@ export async function generateSlides(
 
       await Promise.allSettled(notePromises);
       console.timeEnd('[slides] per-slide total');
-      const html = assembleSlideHtml(fragments, approved.topic || 'Untitled', discipline);
+      const html = assembleSlideHtml(fragments, approved.topic || 'Untitled', discipline, theme, layout);
       callbacks.onComplete(html, fragments, notes);
     } catch (error) {
       console.timeEnd('[slides] per-slide total');
@@ -700,6 +726,8 @@ export async function regenerateSlides(
   improvements: Array<{ slideIndex: number; feedback: string }>,
   discipline: DisciplineConfig,
   callbacks: StreamCallbacks,
+  theme?: ThemeConfig,
+  layout?: LayoutConfig,
 ): Promise<void> {
   const fragments = [...existingFragments];
   const notes: string[] = new Array(fragments.length).fill('');
@@ -717,7 +745,7 @@ export async function regenerateSlides(
 
       console.time(`[improve] slide ${slideNum}`);
 
-      const systemPrompt = buildSlideSystemPrompt(discipline, true);
+      const systemPrompt = buildSlideSystemPrompt(discipline, true, theme, layout);
 
       const response = await callWithTimeout(
         (signal) =>
@@ -761,7 +789,7 @@ Include <div class="slide-number">${slideNum} / ${totalSlides}</div>.`,
     const titleMatch = fragments[0]?.match(/<h1[^>]*>([\s\S]*?)<\/h1>/);
     const topic = titleMatch ? titleMatch[1].replace(/<[^>]+>/g, '').trim() : 'Untitled';
 
-    const html = assembleSlideHtml(fragments, topic, discipline);
+    const html = assembleSlideHtml(fragments, topic, discipline, theme, layout);
     callbacks.onComplete(html, fragments, notes);
   } catch (error) {
     console.timeEnd('[improve] total');

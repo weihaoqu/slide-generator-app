@@ -5,12 +5,19 @@ import { SLIDE_CSS } from './slide-css';
  * "virtual viewport" and scales it to fit whatever iframe size it's placed in.
  * This ensures the full slide is always visible — no clipping.
  */
-export function buildSlideSrcdoc(fragment: string, disciplineCSS: string = ''): string {
+export function buildSlideSrcdoc(
+  fragment: string,
+  disciplineCSS: string = '',
+  themeCSS: string = '',
+  layoutCSS: string = '',
+): string {
   return `<!DOCTYPE html>
 <html><head><style>
 ${SLIDE_CSS}
+${themeCSS}
+${layoutCSS}
 ${disciplineCSS}
-body { margin: 0; overflow: hidden; background: #0f172a; }
+body { margin: 0; overflow: hidden; }
 .slide-scaler {
   width: 1280px;
   height: 720px;

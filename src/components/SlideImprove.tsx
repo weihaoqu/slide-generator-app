@@ -10,6 +10,8 @@ interface SlideImproveProps {
   decisions: SlideDecision[];
   disciplineId: string;
   disciplineCSS: string;
+  themeCSS?: string;
+  layoutCSS?: string;
   onComplete: (slideId: string) => void;
 }
 
@@ -24,6 +26,8 @@ export default function SlideImprove({
   decisions,
   disciplineId,
   disciplineCSS,
+  themeCSS = '',
+  layoutCSS = '',
   onComplete,
 }: SlideImproveProps) {
   const [improvements, setImprovements] = useState<ImprovementInput[]>(
@@ -104,7 +108,7 @@ export default function SlideImprove({
   };
 
   const buildSrcdoc = (fragment: string) => {
-    return buildSlideSrcdoc(fragment, disciplineCSS);
+    return buildSlideSrcdoc(fragment, disciplineCSS, themeCSS, layoutCSS);
   };
 
   if (status === 'improving') {

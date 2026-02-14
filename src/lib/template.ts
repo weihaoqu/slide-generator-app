@@ -95,6 +95,8 @@ export const AVAILABLE_CSS_CLASSES = `Available CSS classes:
 - table with th/td: data tables (tr.highlight for emphasis)
 - .emoji: larger emoji prefix`;
 
+import type { ThemeConfig } from './themes/types';
+
 /** SVG guidance block (only included when includeSvg=true) */
 export const SVG_GUIDANCE = `SVG DIAGRAMS:
 - Wrap in <div class="svg-diagram">
@@ -103,10 +105,30 @@ export const SVG_GUIDANCE = `SVG DIAGRAMS:
 - Accents: #3b82f6 (blue), #8b5cf6 (purple), #10b981 (green), #f59e0b (amber)
 - Add <figcaption> for labels`;
 
-/** Inject discipline-specific CSS into the shared template. */
-export function buildTemplate(discipline: DisciplineConfig): string {
-  if (!discipline.extraCSS) return SLIDE_TEMPLATE;
-  return SLIDE_TEMPLATE.replace('</style>', `${discipline.extraCSS}\n</style>`);
+/** Build SVG guidance with theme-specific colors. */
+export function buildSvgGuidance(theme?: ThemeConfig): string {
+  if (!theme || !theme.svgColors) return SVG_GUIDANCE;
+  const c = theme.svgColors;
+  const accentStr = c.accents.map(a => a).join(', ');
+  return `SVG DIAGRAMS:
+- Wrap in <div class="svg-diagram">
+- Use viewBox, never fixed width/height
+- Theme colors: stroke="${c.stroke}", fill="${c.shapeFill}" (shapes), fill="${c.textFill}" (text)
+- Accents: ${accentStr}
+- Add <figcaption> for labels`;
+}
+
+/**
+ * Inject theme, layout, and discipline CSS into the shared template.
+ * Layering order: base (SLIDE_CSS) -> theme -> layout -> discipline extraCSS
+ */
+export function buildTemplate(discipline: DisciplineConfig, theme?: ThemeConfig, layout?: { css: string }): string {
+  const layers: string[] = [];
+  if (theme?.css) layers.push(theme.css);
+  if (layout?.css) layers.push(layout.css);
+  if (discipline.extraCSS) layers.push(discipline.extraCSS);
+  if (layers.length === 0) return SLIDE_TEMPLATE;
+  return SLIDE_TEMPLATE.replace('</style>', `${layers.join('\n')}\n</style>`);
 }
 
 const SHARED_QUALITY_CHECKS = `

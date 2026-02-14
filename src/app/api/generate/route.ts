@@ -133,6 +133,8 @@ export async function POST(request: NextRequest) {
           topic,
           courseLevel,
           disciplineId,
+          themeId: approvedOutline?.themeId,
+          layoutId: approvedOutline?.layoutId,
           slideCount: actualSlides,
           fileSize,
           createdAt: new Date().toISOString(),

@@ -6,6 +6,8 @@ export interface SlideMetadata {
   topic?: string;
   courseLevel?: string;
   disciplineId?: string;
+  themeId?: string;
+  layoutId?: string;
   slideCount: number;
   fileSize: number;
   createdAt: string;
@@ -80,4 +82,6 @@ export interface ApprovedOutline {
   contentSuggestions: ContentSuggestion[];
   includeSvg?: boolean;
   quality?: 'standard' | 'quality';
+  themeId?: string;
+  layoutId?: string;
 }

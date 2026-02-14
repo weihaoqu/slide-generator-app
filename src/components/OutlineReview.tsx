@@ -3,6 +3,7 @@
 import { useState, useCallback, useMemo } from 'react';
 import type { SlideOutline, OutlineSlide, TeachingSuggestion, ContentSuggestion, ApprovedOutline } from '@/lib/types';
 import type { DisciplineConfig } from '@/lib/disciplines/types';
+import { THEME_LIST, LAYOUT_LIST } from '@/lib/themes';
 
 interface OutlineReviewProps {
   outline: SlideOutline;
@@ -24,6 +25,8 @@ export default function OutlineReview({ outline, outlineId, onApprove, onBack, d
   const [slides, setSlides] = useState<OutlineSlide[]>(outline.slides);
   const [includeSvg, setIncludeSvg] = useState(true);
   const [quality, setQuality] = useState<'standard' | 'quality'>('standard');
+  const [themeId, setThemeId] = useState('dark');
+  const [layoutId, setLayoutId] = useState('default');
 
   const suggestionStyles = useMemo(() => {
     const map: Record<string, { bg: string; label: string }> = {};
@@ -96,6 +99,8 @@ export default function OutlineReview({ outline, outlineId, onApprove, onBack, d
       contentSuggestions,
       includeSvg,
       quality,
+      themeId,
+      layoutId,
     });
   };
 
@@ -161,6 +166,54 @@ export default function OutlineReview({ outline, outlineId, onApprove, onBack, d
               </button>
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* Theme picker */}
+      <div className="bg-zinc-900/80 border border-zinc-800 rounded-2xl p-5 mb-6">
+        <h3 className="text-xs font-heading font-semibold text-zinc-500 uppercase tracking-widest mb-4">Color Theme</h3>
+        <div className="flex flex-wrap gap-2">
+          {THEME_LIST.map(t => (
+            <button
+              key={t.id}
+              onClick={() => setThemeId(t.id)}
+              className={`flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl border transition-all text-sm ${
+                themeId === t.id
+                  ? 'border-orange-500/60 bg-zinc-800 shadow-sm shadow-orange-500/10'
+                  : 'border-zinc-800 bg-zinc-950 hover:border-zinc-700'
+              }`}
+            >
+              <div className="flex gap-1">
+                <span className={`w-4 h-4 rounded-full ${t.preview.bg}`} />
+                <span className={`w-4 h-4 rounded-full ${t.preview.accent}`} />
+              </div>
+              <span className={`font-medium ${themeId === t.id ? 'text-zinc-100' : 'text-zinc-400'}`}>{t.name}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Layout picker */}
+      <div className="bg-zinc-900/80 border border-zinc-800 rounded-2xl p-5 mb-6">
+        <h3 className="text-xs font-heading font-semibold text-zinc-500 uppercase tracking-widest mb-4">Layout Style</h3>
+        <div className="flex flex-wrap gap-2">
+          {LAYOUT_LIST.map(l => (
+            <button
+              key={l.id}
+              onClick={() => setLayoutId(l.id)}
+              className={`flex items-center gap-2 px-3.5 py-2.5 rounded-xl border transition-all text-sm ${
+                layoutId === l.id
+                  ? 'border-orange-500/60 bg-zinc-800 shadow-sm shadow-orange-500/10'
+                  : 'border-zinc-800 bg-zinc-950 hover:border-zinc-700'
+              }`}
+            >
+              <span className="text-base w-5 text-center">{l.preview.icon}</span>
+              <div className="text-left">
+                <span className={`font-medium ${layoutId === l.id ? 'text-zinc-100' : 'text-zinc-400'}`}>{l.name}</span>
+                <span className={`block text-[10px] ${layoutId === l.id ? 'text-zinc-500' : 'text-zinc-600'}`}>{l.description}</span>
+              </div>
+            </button>
+          ))}
         </div>
       </div>
 

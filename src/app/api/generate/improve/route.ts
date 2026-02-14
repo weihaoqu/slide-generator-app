@@ -4,6 +4,7 @@ import { getSlideFragments, getSlideMetadata, saveSlides, saveSlideFragments, sa
 import { SlideMetadata } from '@/lib/types';
 import { setProgress, getProgress, clearProgress } from '@/lib/progress';
 import { getDiscipline } from '@/lib/disciplines';
+import { getTheme, getLayout } from '@/lib/themes';
 
 export const maxDuration = 120;
 
@@ -30,6 +31,8 @@ export async function POST(request: NextRequest) {
     }
 
     const discipline = getDiscipline(disciplineId);
+    const theme = getTheme(metadata.themeId);
+    const layout = getLayout(metadata.layoutId);
 
     // Set initial progress
     setProgress(slideId, {
@@ -118,7 +121,9 @@ export async function POST(request: NextRequest) {
           });
           clearProgress(slideId);
         },
-      }
+      },
+      theme,
+      layout,
     );
 
     return Response.json({ slideId });
