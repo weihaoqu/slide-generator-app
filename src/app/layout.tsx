@@ -35,11 +35,14 @@ export default function RootLayout({
       <body
         className={`${dmSans.variable} ${sora.variable} ${geistMono.variable} antialiased min-h-screen`}
       >
-        <div id="app-root">
+        <div id="app-root" className="flex flex-col min-h-screen">
           <Header />
-          <main className="max-w-6xl mx-auto px-6 py-8">
+          <main className="max-w-6xl mx-auto px-6 py-8 flex-1">
             {children}
           </main>
+          <footer className="text-center text-xs text-zinc-600 py-4 border-t border-zinc-900">
+            Designed and Implemented by Dr. Weihao Qu, Monmouth University.
+          </footer>
         </div>
       </body>
     </html>
