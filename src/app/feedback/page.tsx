@@ -298,9 +298,9 @@ const styles: Record<string, React.CSSProperties> = {
   },
   mainLayout: {
     display: 'grid',
-    gridTemplateColumns: '1fr 360px',
-    gap: '1.5rem',
-    maxWidth: 1400,
+    gridTemplateColumns: '1fr 320px',
+    gap: '1rem',
+    maxWidth: 1600,
     margin: '0 auto',
     minHeight: '70vh',
   },
@@ -311,7 +311,7 @@ const styles: Record<string, React.CSSProperties> = {
   iframe: {
     width: '100%',
     flex: 1,
-    minHeight: '70vh',
+    minHeight: '85vh',
     border: '1px solid #334155',
     borderRadius: 12,
     background: '#1e293b',
