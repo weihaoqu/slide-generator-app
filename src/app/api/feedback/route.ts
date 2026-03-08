@@ -47,13 +47,49 @@ export async function GET(req: Request) {
 
   const { searchParams } = new URL(req.url);
   const deckUrl = searchParams.get('deck');
+
+  // If no deck param, return all decks summary (for admin)
   if (!deckUrl) {
-    return Response.json({ error: 'Missing deck parameter' }, { status: 400 });
+    if (!existsSync(DATA_DIR)) return Response.json([]);
+    const { readdir } = await import('fs/promises');
+    const files = await readdir(DATA_DIR);
+    const decks = [];
+    for (const file of files) {
+      if (!file.endsWith('.json')) continue;
+      const data = await readFile(path.join(DATA_DIR, file), 'utf-8');
+      const entries = JSON.parse(data);
+      if (entries.length > 0) {
+        decks.push({
+          slug: file.replace('.json', ''),
+          deckUrl: entries[0].deckUrl,
+          count: entries.length,
+          lastTs: entries[entries.length - 1].ts,
+        });
+      }
+    }
+    return Response.json(decks);
   }
 
   const slug = slugify(deckUrl);
   const entries = await readFeedback(slug);
   return Response.json(entries);
+}
+
+export async function DELETE(req: Request) {
+  if (!(await isAuthenticated())) {
+    return Response.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  const { deckUrl, id } = await req.json();
+  if (!deckUrl || !id) {
+    return Response.json({ error: 'Missing deckUrl and id' }, { status: 400 });
+  }
+
+  const slug = slugify(deckUrl);
+  const entries = await readFeedback(slug) as { id: string }[];
+  const filtered = entries.filter(e => e.id !== id);
+  await writeFeedback(slug, filtered);
+  return Response.json({ ok: true });
 }
 
 export async function POST(req: Request) {

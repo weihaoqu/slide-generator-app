@@ -16,7 +16,7 @@ COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 COPY pdf-polyfill.js ./
-RUN mkdir -p /app/data/generated
+RUN mkdir -p /app/data/generated /app/data/feedback && chown -R node:node /app/data
 EXPOSE 3000
 USER node
 CMD ["node", "--require", "./pdf-polyfill.js", "server.js"]
