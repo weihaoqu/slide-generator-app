@@ -49,6 +49,17 @@ export default function FeedbackPage() {
     };
   }, []);
 
+  // Listen for slide navigation from iframe
+  useEffect(() => {
+    const handler = (e: MessageEvent) => {
+      if (e.data?.type === 'slideChange' && typeof e.data.page === 'number') {
+        setPage(e.data.page);
+      }
+    };
+    window.addEventListener('message', handler);
+    return () => window.removeEventListener('message', handler);
+  }, []);
+
   useEffect(() => {
     fetch('/api/feedback?deck=__check__')
       .then(r => { setAuthed(r.status !== 401); setChecking(false); })
