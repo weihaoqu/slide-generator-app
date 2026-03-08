@@ -27,6 +27,28 @@ export default function FeedbackPage() {
   const [feedback, setFeedback] = useState<FeedbackEntry[]>([]);
   const [panelOpen, setPanelOpen] = useState(true);
 
+  // Break out of parent layout constraints
+  useEffect(() => {
+    const main = document.querySelector('main');
+    const footer = document.querySelector('footer');
+    const header = document.querySelector('header');
+    if (main) {
+      main.style.maxWidth = 'none';
+      main.style.margin = '0';
+      main.style.padding = '0';
+      main.style.flex = '1';
+      main.style.display = 'flex';
+      main.style.flexDirection = 'column';
+    }
+    if (footer) footer.style.display = 'none';
+    if (header) header.style.display = 'none';
+    return () => {
+      if (main) { main.style.maxWidth = ''; main.style.margin = ''; main.style.padding = ''; main.style.flex = ''; main.style.display = ''; main.style.flexDirection = ''; }
+      if (footer) footer.style.display = '';
+      if (header) header.style.display = '';
+    };
+  }, []);
+
   useEffect(() => {
     fetch('/api/feedback?deck=__check__')
       .then(r => { setAuthed(r.status !== 401); setChecking(false); })
