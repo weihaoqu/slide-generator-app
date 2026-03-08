@@ -117,25 +117,29 @@ export default function FeedbackPage() {
 
   return (
     <div style={styles.container}>
-      <h1 style={styles.title}>Slide Feedback Collector</h1>
-      <p style={styles.subtitle}>Load a slide deck, navigate to the page with an issue, and submit your feedback</p>
+      {!loadedUrl && (
+        <>
+          <h1 style={styles.title}>Slide Feedback</h1>
+          <p style={styles.subtitle}>Paste a slide deck URL to review and submit feedback</p>
+        </>
+      )}
 
-      {/* URL input */}
+      {/* URL bar — compact when deck is loaded */}
       <div style={styles.urlBar}>
         <input
           type="text"
           value={deckUrl}
           onChange={e => setDeckUrl(e.target.value)}
           onKeyDown={e => e.key === 'Enter' && loadDeck()}
-          placeholder="Paste slide deck URL (e.g., https://weihaoqu.github.io/course-slides/bf422/...)"
-          style={{ ...styles.input, flex: 1 }}
+          placeholder="Paste slide deck URL..."
+          style={{ ...styles.input, flex: 1, fontSize: '0.85rem', padding: '0.4rem 0.6rem' }}
         />
-        <button onClick={loadDeck} style={styles.btnPrimary}>Load</button>
+        <button onClick={loadDeck} style={{ ...styles.btnPrimary, padding: '0.4rem 1rem', fontSize: '0.85rem' }}>Load</button>
       </div>
 
       {loadedUrl && (
         <div style={styles.mainLayout}>
-          {/* Iframe */}
+          {/* Iframe — fills nearly all vertical space */}
           <div style={styles.iframePanel}>
             <iframe
               src={loadedUrl}
@@ -143,45 +147,40 @@ export default function FeedbackPage() {
               title="Slide deck"
               allow="fullscreen"
             />
-            <p style={styles.iframeHint}>
-              Use arrow keys inside the deck to navigate. Note the page number shown at the bottom.
-            </p>
           </div>
 
-          {/* Feedback panel */}
+          {/* Feedback panel — narrow sidebar */}
           <div style={styles.feedbackPanel}>
-            <h3 style={styles.panelTitle}>Submit Feedback</h3>
             <form onSubmit={submitFeedback}>
-              <div style={styles.formRow}>
-                <label style={styles.label}>Page #</label>
-                <input
-                  type="number"
-                  min={1}
-                  value={page}
-                  onChange={e => setPage(Number(e.target.value))}
-                  style={{ ...styles.input, width: 80 }}
-                />
+              <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                <div style={{ width: 70 }}>
+                  <label style={styles.label}>Page #</label>
+                  <input
+                    type="number"
+                    min={1}
+                    value={page}
+                    onChange={e => setPage(Number(e.target.value))}
+                    style={{ ...styles.input, fontSize: '0.85rem', padding: '0.35rem 0.5rem' }}
+                  />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <label style={styles.label}>Name</label>
+                  <input
+                    type="text"
+                    value={author}
+                    onChange={e => setAuthor(e.target.value)}
+                    placeholder="Optional"
+                    style={{ ...styles.input, fontSize: '0.85rem', padding: '0.35rem 0.5rem' }}
+                  />
+                </div>
               </div>
-              <div style={styles.formRow}>
-                <label style={styles.label}>Your name</label>
-                <input
-                  type="text"
-                  value={author}
-                  onChange={e => setAuthor(e.target.value)}
-                  placeholder="Optional"
-                  style={styles.input}
-                />
-              </div>
-              <div style={styles.formRow}>
-                <label style={styles.label}>Feedback</label>
-                <textarea
-                  value={text}
-                  onChange={e => setText(e.target.value)}
-                  placeholder="Describe the issue or suggestion..."
-                  rows={4}
-                  style={{ ...styles.input, resize: 'vertical' as const }}
-                />
-              </div>
+              <textarea
+                value={text}
+                onChange={e => setText(e.target.value)}
+                placeholder="Describe the issue or suggestion..."
+                rows={3}
+                style={{ ...styles.input, resize: 'vertical' as const, fontSize: '0.85rem', padding: '0.35rem 0.5rem', marginBottom: '0.5rem' }}
+              />
               <button
                 type="submit"
                 disabled={submitting || !text.trim()}
@@ -189,9 +188,11 @@ export default function FeedbackPage() {
                   ...styles.btnPrimary,
                   opacity: submitting || !text.trim() ? 0.5 : 1,
                   width: '100%',
+                  padding: '0.4rem',
+                  fontSize: '0.85rem',
                 }}
               >
-                {submitting ? 'Submitting...' : 'Submit Feedback'}
+                {submitting ? 'Submitting...' : 'Submit'}
               </button>
             </form>
 
@@ -200,25 +201,19 @@ export default function FeedbackPage() {
               <h4 style={styles.historyTitle}>
                 Feedback ({feedback.length})
                 {feedback.length > 0 && (
-                  <a
-                    href="/api/feedback/export"
-                    style={styles.exportLink}
-                    download
-                  >
-                    Export all
-                  </a>
+                  <a href="/api/feedback/export" style={styles.exportLink} download>Export</a>
                 )}
               </h4>
               {feedback.length === 0 && (
-                <p style={{ color: '#64748b', fontSize: '0.85rem' }}>No feedback yet for this deck.</p>
+                <p style={{ color: '#64748b', fontSize: '0.8rem' }}>No feedback yet.</p>
               )}
               {[...feedback].reverse().map(f => (
                 <div key={f.id} style={styles.feedbackCard}>
                   <div style={styles.feedbackHeader}>
-                    <span style={styles.pageBadge}>Page {f.page}</span>
-                    <span style={styles.feedbackAuthor}>{f.author || 'Anonymous'}</span>
+                    <span style={styles.pageBadge}>P{f.page}</span>
+                    <span style={styles.feedbackAuthor}>{f.author || 'Anon'}</span>
                     <span style={styles.feedbackTime}>
-                      {new Date(f.ts).toLocaleDateString()} {new Date(f.ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      {new Date(f.ts).toLocaleDateString()}
                     </span>
                   </div>
                   <p style={styles.feedbackText}>{f.text}</p>
@@ -237,22 +232,23 @@ const styles: Record<string, React.CSSProperties> = {
     minHeight: '100vh',
     background: '#0f172a',
     color: '#e2e8f0',
-    padding: '2rem',
+    padding: '0.5rem 0.75rem',
     fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
   },
   title: {
-    fontSize: '2rem',
+    fontSize: '1.8rem',
     background: 'linear-gradient(135deg, #60a5fa, #a78bfa)',
     WebkitBackgroundClip: 'text',
     WebkitTextFillColor: 'transparent',
     textAlign: 'center' as const,
+    marginTop: '2rem',
     marginBottom: '0.25rem',
   },
   subtitle: {
     textAlign: 'center' as const,
     color: '#94a3b8',
-    marginBottom: '1.5rem',
-    fontSize: '1rem',
+    marginBottom: '1rem',
+    fontSize: '0.9rem',
   },
   authBox: {
     maxWidth: 400,
@@ -267,17 +263,16 @@ const styles: Record<string, React.CSSProperties> = {
   },
   urlBar: {
     display: 'flex',
-    gap: '0.5rem',
-    maxWidth: 900,
-    margin: '0 auto 1.5rem',
+    gap: '0.4rem',
+    marginBottom: '0.5rem',
   },
   input: {
     background: '#1e293b',
     border: '1px solid #334155',
-    borderRadius: 8,
-    padding: '0.6rem 0.75rem',
+    borderRadius: 6,
+    padding: '0.4rem 0.6rem',
     color: '#e2e8f0',
-    fontSize: '0.95rem',
+    fontSize: '0.9rem',
     outline: 'none',
     fontFamily: 'inherit',
     width: '100%',
@@ -286,9 +281,9 @@ const styles: Record<string, React.CSSProperties> = {
     background: '#6366f1',
     color: 'white',
     border: 'none',
-    borderRadius: 8,
-    padding: '0.6rem 1.5rem',
-    fontSize: '0.95rem',
+    borderRadius: 6,
+    padding: '0.4rem 1rem',
+    fontSize: '0.9rem',
     fontWeight: 600,
     cursor: 'pointer',
   },
@@ -298,106 +293,90 @@ const styles: Record<string, React.CSSProperties> = {
   },
   mainLayout: {
     display: 'grid',
-    gridTemplateColumns: '1fr 320px',
-    gap: '1rem',
-    maxWidth: 1600,
-    margin: '0 auto',
-    minHeight: '70vh',
+    gridTemplateColumns: '1fr 260px',
+    gap: '0.5rem',
+    height: 'calc(100vh - 5.5rem)',
   },
   iframePanel: {
     display: 'flex',
     flexDirection: 'column' as const,
+    minHeight: 0,
   },
   iframe: {
     width: '100%',
-    flex: 1,
-    minHeight: '85vh',
+    height: '100%',
     border: '1px solid #334155',
-    borderRadius: 12,
+    borderRadius: 8,
     background: '#1e293b',
-  },
-  iframeHint: {
-    color: '#64748b',
-    fontSize: '0.8rem',
-    marginTop: '0.5rem',
-    textAlign: 'center' as const,
   },
   feedbackPanel: {
     background: '#1e293b',
     border: '1px solid #334155',
-    borderRadius: 12,
-    padding: '1.25rem',
+    borderRadius: 8,
+    padding: '0.75rem',
     overflowY: 'auto' as const,
-    maxHeight: '80vh',
-  },
-  panelTitle: {
-    color: '#93c5fd',
-    fontSize: '1.1rem',
-    marginBottom: '1rem',
-  },
-  formRow: {
-    marginBottom: '0.75rem',
+    minHeight: 0,
   },
   label: {
     display: 'block',
     color: '#94a3b8',
-    fontSize: '0.85rem',
-    marginBottom: '0.25rem',
+    fontSize: '0.75rem',
+    marginBottom: '0.15rem',
   },
   historySection: {
-    marginTop: '1.5rem',
+    marginTop: '0.75rem',
     borderTop: '1px solid #334155',
-    paddingTop: '1rem',
+    paddingTop: '0.5rem',
   },
   historyTitle: {
     color: '#94a3b8',
-    fontSize: '0.9rem',
-    marginBottom: '0.75rem',
+    fontSize: '0.8rem',
+    marginBottom: '0.5rem',
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
   exportLink: {
     color: '#a78bfa',
-    fontSize: '0.8rem',
+    fontSize: '0.75rem',
     textDecoration: 'none',
   },
   feedbackCard: {
     background: '#0f172a',
     border: '1px solid #334155',
-    borderRadius: 8,
-    padding: '0.75rem',
-    marginBottom: '0.5rem',
+    borderRadius: 6,
+    padding: '0.5rem',
+    marginBottom: '0.4rem',
   },
   feedbackHeader: {
     display: 'flex',
     alignItems: 'center',
-    gap: '0.5rem',
-    marginBottom: '0.4rem',
+    gap: '0.4rem',
+    marginBottom: '0.25rem',
     flexWrap: 'wrap' as const,
   },
   pageBadge: {
     background: '#6366f1',
     color: 'white',
-    fontSize: '0.75rem',
-    padding: '0.15rem 0.5rem',
-    borderRadius: 12,
+    fontSize: '0.7rem',
+    padding: '0.1rem 0.4rem',
+    borderRadius: 10,
     fontWeight: 600,
   },
   feedbackAuthor: {
     color: '#93c5fd',
-    fontSize: '0.8rem',
+    fontSize: '0.75rem',
     fontWeight: 500,
   },
   feedbackTime: {
     color: '#475569',
-    fontSize: '0.75rem',
+    fontSize: '0.7rem',
     marginLeft: 'auto',
   },
   feedbackText: {
     color: '#cbd5e1',
-    fontSize: '0.88rem',
-    lineHeight: 1.5,
+    fontSize: '0.8rem',
+    lineHeight: 1.4,
     margin: 0,
   },
 };
