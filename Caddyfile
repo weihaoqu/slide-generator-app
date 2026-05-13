@@ -1,5 +1,115 @@
+monmouthaiteaching.com {
+    @aigames path /ai-games /ai-games/*
+    handle @aigames {
+        reverse_proxy ai-games:3000 {
+            flush_interval -1
+        }
+    }
+
+    @research path /research /research/*
+    handle @research {
+        uri strip_prefix /research
+        reverse_proxy research-site-app-1:80 {
+            flush_interval -1
+        }
+    }
+
+    @cs215 path /cs215 /cs215/*
+    handle @cs215 {
+        reverse_proxy cs215-platform-app-1:3001 {
+            flush_interval -1
+        }
+    }
+
+    @bf422 path /bf422 /bf422/*
+    handle @bf422 {
+        reverse_proxy bf422-platform-app-1:3002 {
+            flush_interval -1
+        }
+    }
+
+    @aiqtest path /ai-iq-test /ai-iq-test/*
+    handle @aiqtest {
+        uri strip_prefix /ai-iq-test
+        root * /srv/ai-iq-test
+        file_server
+    }
+
+    @snhs path /snhs /snhs/*
+    handle @snhs {
+        uri strip_prefix /snhs
+        root * /srv/snhs
+        file_server
+    }
+
+    @cs310 path /cs310 /cs310/*
+    handle @cs310 {
+        uri strip_prefix /cs310
+        reverse_proxy cs310-exercise-app:3000 {
+            flush_interval -1
+        }
+    }
+
+    handle {
+        root * /srv/portal
+        file_server
+    }
+}
+
 :80 {
-    reverse_proxy app:3000 {
-        flush_interval -1
+    @aigames80 path /ai-games /ai-games/*
+    handle @aigames80 {
+        reverse_proxy ai-games:3000 {
+            flush_interval -1
+        }
+    }
+
+    @research path /research /research/*
+    handle @research {
+        uri strip_prefix /research
+        reverse_proxy research-site-app-1:80 {
+            flush_interval -1
+        }
+    }
+
+    @cs215 path /cs215 /cs215/*
+    handle @cs215 {
+        reverse_proxy cs215-platform-app-1:3001 {
+            flush_interval -1
+        }
+    }
+
+    @bf422 path /bf422 /bf422/*
+    handle @bf422 {
+        reverse_proxy bf422-platform-app-1:3002 {
+            flush_interval -1
+        }
+    }
+
+    @aiqtest80 path /ai-iq-test /ai-iq-test/*
+    handle @aiqtest80 {
+        uri strip_prefix /ai-iq-test
+        root * /srv/ai-iq-test
+        file_server
+    }
+
+    @snhs80 path /snhs /snhs/*
+    handle @snhs80 {
+        uri strip_prefix /snhs
+        root * /srv/snhs
+        file_server
+    }
+
+    @cs310_80 path /cs310 /cs310/*
+    handle @cs310_80 {
+        uri strip_prefix /cs310
+        reverse_proxy cs310-exercise-app:3000 {
+            flush_interval -1
+        }
+    }
+
+    handle {
+        root * /srv/portal
+        file_server
     }
 }

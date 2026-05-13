@@ -1,10 +1,11 @@
 services:
-  app:
-    build: .
+  ai-games:
+    build: /opt/apps/ai-mastery-games
     restart: unless-stopped
-    env_file: .env
+    environment:
+      - HOSTNAME=0.0.0.0
     volumes:
-      - generated_data:/app/data/generated
+      - ai_games_data:/app/.data
     networks:
       - web
 
@@ -17,15 +18,20 @@ services:
       - "443:443/udp"
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile
+      - /opt/apps/portal:/srv/portal:ro
+      - /srv/ai-iq-test:/srv/ai-iq-test
+      - /srv/snhs:/srv/snhs
       - caddy_data:/data
       - caddy_config:/config
     networks:
       - web
     depends_on:
-      - app
+      - ai-games
 
 volumes:
   generated_data:
+  feedback_data:
+  ai_games_data:
   caddy_data:
   caddy_config:
 
