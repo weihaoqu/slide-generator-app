@@ -1,4 +1,17 @@
+(security_headers) {
+    header {
+        # HSTS without includeSubDomains (in case a future subdomain isn't on HTTPS)
+        Strict-Transport-Security "max-age=31536000"
+        X-Content-Type-Options "nosniff"
+        Referrer-Policy "strict-origin-when-cross-origin"
+        Permissions-Policy "geolocation=(), microphone=(), camera=()"
+        -Server
+    }
+}
+
 monmouthaiteaching.com {
+    import security_headers
+
     @aigames path /ai-games /ai-games/*
     handle @aigames {
         reverse_proxy ai-games:3000 {
@@ -57,6 +70,8 @@ monmouthaiteaching.com {
 }
 
 :80 {
+    import security_headers
+
     @aigames80 path /ai-games /ai-games/*
     handle @aigames80 {
         reverse_proxy ai-games:3000 {
