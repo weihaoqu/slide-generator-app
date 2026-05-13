@@ -1,16 +1,11 @@
-(security_headers) {
+monmouthaiteaching.com {
     header {
-        # HSTS without includeSubDomains (in case a future subdomain isn't on HTTPS)
         Strict-Transport-Security "max-age=31536000"
         X-Content-Type-Options "nosniff"
         Referrer-Policy "strict-origin-when-cross-origin"
         Permissions-Policy "geolocation=(), microphone=(), camera=()"
         -Server
     }
-}
-
-monmouthaiteaching.com {
-    import security_headers
 
     @aigames path /ai-games /ai-games/*
     handle @aigames {
@@ -70,7 +65,13 @@ monmouthaiteaching.com {
 }
 
 :80 {
-    import security_headers
+    header {
+        Strict-Transport-Security "max-age=31536000"
+        X-Content-Type-Options "nosniff"
+        Referrer-Policy "strict-origin-when-cross-origin"
+        Permissions-Policy "geolocation=(), microphone=(), camera=()"
+        -Server
+    }
 
     @aigames80 path /ai-games /ai-games/*
     handle @aigames80 {
