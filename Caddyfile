@@ -58,6 +58,15 @@ monmouthaiteaching.com {
         }
     }
 
+    @links path /links /links/*
+    handle @links {
+        basic_auth {
+            wqu $2a$14$lP0D5NxqopfDhuEyPCNIA.9rTBz6XB/LitgiPbuhUR9TMcmAUFjPq
+        }
+        root * /srv/portal
+        file_server
+    }
+
     handle {
         root * /srv/portal
         file_server
@@ -122,6 +131,11 @@ monmouthaiteaching.com {
         reverse_proxy cs310-exercise-app:3000 {
             flush_interval -1
         }
+    }
+
+    @links80 path /links /links/*
+    handle @links80 {
+        redir https://monmouthaiteaching.com{uri} permanent
     }
 
     handle {
